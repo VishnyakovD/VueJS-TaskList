@@ -1,11 +1,32 @@
 <template>
-  <div>
-    <h1 class="header">Task list</h1>
+  <section>
+  <div v-if="isParentTaskList">
+    <h1 class="header">Task list names</h1>
+    <InputText 
+    :text="textName" 
+    :selectedId="selectedIdName"
+    @textChanged="textChangedName" 
+    @createTask="createTaskName" 
+    v-if="isVisibleInputName"/> 
+
+    <ListTask 
+    :listTaskFiltered="listTaskFilteredName"
+    :selectedId="selectedIdName" 
+     @selectTask="selectTaskName"
+     @deleteTask="deleteTaskName"
+     @likeTask="likeTaskName"
+     @listTask1="showListTask"
+      :isListNames="true"
+    />
+  </div>
+
+<div v-else>
+    <h1 class="header"><i class="el-icon-back" @click="isParentTaskList=!isParentTaskList"></i>{{selectedItemName.text}}</h1>
     <InputText 
     :text="text" 
     :selectedId="selectedId"
     @textChanged="textChanged" 
-    @createTack="createTask" 
+    @createTask="createTask" 
     v-if="isVisibleInput"/> 
 
     <ListTask 
@@ -14,8 +35,12 @@
      @selectTask="selectTask"
      @deleteTask="deleteTask"
      @likeTask="likeTask"
+    
     />
   </div>
+  </section>
+
+
 </template>
 
 <script>
@@ -27,11 +52,20 @@ export default {
   name: 'Home',
   data(){
     return {
+    isParentTaskList:true,
+
     selectedId:-1,
     text:"",
     listTask:[],
     isVisibleInput:true,
-    selectedItem:{}
+    selectedItem:{},
+
+    selectedIdName:-1,
+    textName:"",
+    listTaskName:[],
+    isVisibleInputName:true,
+    selectedItemName:{},
+    isListNames:true
     }  
   },
 
@@ -41,36 +75,64 @@ export default {
 
   computed:{
     listTaskFiltered:function(){
+      console.log(this.selectedItemName,"ss")
       if(this.selectedId==-1)
-        return this.listTask.filter(item=>{
+        return this.selectedItemName.listTask.filter(item=>{
           if(item.text.indexOf(this.text)===0) return item
         })
       else
         return this.listTask.filter(item=>{
           if(item.id===this.selectedId) return item
         })
+    },
+
+    listTaskFilteredName:function(){
+      if(this.selectedIdName==-1)
+        return this.listTaskName.filter(item=>{
+          if(item.text.indexOf(this.textName)===0) return item
+        })
+      else
+        return this.listTaskName.filter(item=>{
+          if(item.id===this.selectedIdName) return item
+        })
     }
   },
 
   updated(){
-          Vue.nextTick(()=>{
-         this.isVisibleInput=true
+      Vue.nextTick(()=>{
+        this.isVisibleInput=true
+        this.isVisibleInputName=true
       })
   },
 
   methods:{    
     likeTask(value){
-      this.listTask.find(item=>{
+      this.selectedItemName.listTask.find(item=>{
         if(item.id===value) item.isLike=!item.isLike
       })
       
     },
+
+    likeTaskName(value){
+      this.listTaskName.find(item=>{
+        if(item.id===value) item.isLike=!item.isLike
+      })      
+    },
+
     deleteTask(value){
-      let idx=this.listTask.findIndex(item=>{
+      let idx=this.selectedItemName.listTask.findIndex(item=>{
         if(item.id===value) return true
       })
       
-      this.listTask.splice(idx,1)
+      this.selectedItemName.listTask.splice(idx,1)
+    },
+
+    deleteTaskName(value){
+      let idx=this.listTaskName.findIndex(item=>{
+        if(item.id===value) return true
+      })
+      
+      this.listTaskName.splice(idx,1)
     },
 
     selectTask(item){
@@ -80,9 +142,27 @@ export default {
         this.text=""
       }
       else{
+        
         this.selectedId=item.id
         this.text=item.text
-        this.selectedItem=this.listTask.find(elem=>{
+        this.selectedItem=this.selectedItemName.listTask.find(elem=>{
+        if(elem.id===item.id) return true
+      })
+      console.log("selectedItemName", this.selectedItemName.listTask)
+      console.log("selectedItem----", this.selectedItem)
+      }      
+    },
+
+    selectTaskName(item){
+      this.isVisibleInputName=false
+      if(this.selectedIdName===item.id){
+        this.selectedIdName=-1
+        this.textName=""
+      }
+      else{
+        this.selectedIdName=item.id
+        this.textName=item.text
+        this.selectedItemName=this.listTaskName.find(elem=>{
         if(elem.id===item.id) return true
       })
       }      
@@ -102,9 +182,23 @@ export default {
       }  
     }, 
 
+    textChangedName(value){
+      this.textName=value
+
+      if(this.selectedIdName>-1 && value!==''){
+        let dateCreate=new Date()
+        this.selectedItemName.text=value
+        this.selectedItemName.date=`${dateCreate.toLocaleDateString()} ${dateCreate.toLocaleTimeString()}`
+        this.selectedItemName.isEdited=true
+      } 
+    else{
+        this.selectedIdName=-1
+      }  
+    }, 
+
     createTask(){
       let dateCreate=new Date()
-      this.listTask.push(
+      this.selectedItemName.listTask.push(
         {        
           id:dateCreate.getTime(),
           text:this.text,
@@ -113,7 +207,6 @@ export default {
           isEdited:false,
         }
       )
-
       this.isVisibleInput=false
       this.text=""
       this.selectedId=-1  
@@ -121,6 +214,35 @@ export default {
          this.isVisibleInput=true
       })    
     },
+
+    createTaskName(){
+
+      let dateCreate=new Date()
+      this.listTaskName.push(
+        {        
+          id:dateCreate.getTime(),
+          text:this.textName,
+          date:`${dateCreate.toLocaleDateString()} ${dateCreate.toLocaleTimeString()}`,
+          isLike:false,
+          isEdited:false,
+          listTask:[]
+        }
+      )
+
+      this.isVisibleInputName=false
+      this.textName=""
+      this.selectedIdName=-1  
+      Vue.nextTick(()=>{
+         this.isVisibleInputName=true
+      })    
+    },
+    showListTask(){
+      //=
+      this.isParentTaskList=!this.isParentTaskList
+      
+
+      console.log("xxxx", this.selectedItemName, this.selectedIdName)
+    }
   }
 }
 </script>

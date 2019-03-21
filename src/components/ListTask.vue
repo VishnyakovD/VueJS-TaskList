@@ -8,9 +8,10 @@
     @click.native="selectItem(item.id, item.text)"
     >
         <div>{{item.text}}</div>
-        <div>
-            <br>  
+        <div>  
             <div class="panel-item">
+                
+                <i class="el-icon-view" v-if="selectedId>-1" @click.stop="showListTasks()"></i>
                 {{item.date}}  
                 <i class="el-icon-edit" v-if="item.isEdited"></i>
                 <i :class="{'el-icon-star-on':item.isLike,'el-icon-star-off':!item.isLike}"
@@ -28,7 +29,8 @@ export default {
   name: 'ListTask',
   props: {
     selectedId:{default:-1},
-    listTaskFiltered:{}
+    listTaskFiltered:{},
+    isListNames:{default:true}
   },
 
    data(){
@@ -51,7 +53,10 @@ export default {
           this.$emit("textChanged",e.target.value)
       },
       createItem(){
-          this.$emit("createTack")
+          this.$emit("createTask")
+      },
+      showListTasks(){
+           this.$emit("listTask1")
       }
   }
 }

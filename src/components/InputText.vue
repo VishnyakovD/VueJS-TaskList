@@ -43,7 +43,7 @@ export default {
       },
 
       createItem(){
-          this.$emit("createTack")
+          this.$emit("createTask")
       }
   }
 }
